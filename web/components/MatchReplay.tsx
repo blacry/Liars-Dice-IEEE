@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Die } from './DiceTable';
+import DiceTable from './DiceTable';
 
 type Bid = { q: number; f: number };
 export type ReplayFrame = {
@@ -53,7 +53,7 @@ function detail(frame: ReplayFrame) {
   return `Final score: ${frame.scores_after.join('–')}.`;
 }
 
-export default function MatchReplay({ frames }: { frames: ReplayFrame[] }) {
+export default function MatchReplay({ frames, scene, sound, onSceneChange, onSoundToggle }: { frames: ReplayFrame[]; scene?:'felt'|'bar'|'classroom'|'midnight'; sound?:boolean; onSceneChange?:(scene:'felt'|'bar'|'classroom'|'midnight')=>void; onSoundToggle?:()=>void }) {
   const [index, setIndex] = useState(0);
   const slideRef = useRef<HTMLDivElement>(null);
   const firstRender = useRef(true);
@@ -80,7 +80,7 @@ export default function MatchReplay({ frames }: { frames: ReplayFrame[] }) {
     <div className="replay-slide" ref={slideRef} aria-live="polite"><div className="replay-slide-head"><span className={`replay-actor ${frame.actor === 'HUMAN' ? 'human' : frame.actor === 'AI' ? 'ai' : ''}`}>{frame.kind.replaceAll('_', ' ').toUpperCase()} · {player(frame.actor).toUpperCase()}</span><span>ROUND {frame.round} / STEP {index + 1}</span></div>
       <h4>{title(frame)}</h4><p className="replay-summary">{detail(frame)}</p>
       <div className="replay-board"><div className="replay-board-note">POST-MATCH REVEAL <span>The AI only saw its own hand during play.</span></div>
-        <div className="replay-hands"><div><span>YOUR FIVE DICE</span><div className="replay-dice">{frame.hands[0].map((die, position) => <Die key={position} value={die} small />)}</div></div><div><span>AI&apos;S FIVE DICE</span><div className="replay-dice">{frame.hands[1].map((die, position) => <Die key={position} value={die} small />)}</div></div></div>
+        <DiceTable hand={frame.hands[0]} aiHand={frame.hands[1]} bid={frame.bid} round={frame.round} reduceMotion scene={scene} sound={sound} onSceneChange={onSceneChange} onSoundToggle={onSoundToggle} />
         <div className="replay-board-foot"><div><span>CLAIM IN PLAY</span><strong>{claim(frame.bid)}</strong></div><div><span>SCORE · YOU / AI</span><strong>{scores.join('–')}</strong></div></div>
       </div>
       <div className="replay-analysis"><div className="replay-voice"><span>{humanMove ? 'AI’S READ OF YOUR MOVE' : aiMove ? 'WHY THE AI MADE THIS MOVE' : 'ROUND ANALYSIS'}</span><p>“{frame.ai_read}”</p>{humanMove && <small>Interpretation from public actions and the AI hand. Your intent cannot be known from the game log.</small>}</div>
